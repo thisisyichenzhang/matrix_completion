@@ -65,6 +65,45 @@ for(n in n_vec){
 }
 
 
-#library(data.table)
-#sim_results_ggd<-as.data.table(sim_results_ggd)
-#sim_results_ggd[,.(optimal.lambda=lambda[which.min(error)]),by=SNR]
+library(data.table)
+library(ggplot2)
+sim_results_ggd<-as.data.table(sim_results_ggd_n100_rank2345_miss0.01)
+data<-sim_results_ggd[sigma<0.8,]
+data<-data[,.(optimal.lambda=lambda[which.min(error)]),by=.(n,rank,percent_missing,sigma)]
+data
+ggplot(data = data,aes(x = sigma, y = optimal.lambda))+geom_point() + ggtitle("lasso n=100 facet by rank") +facet_wrap(~rank)
+
+
+
+####### plot for sqrt lasso n=50 results ###
+sim_results<-as.data.table(sim_results_n50)
+data2<-sim_results[percent_missing==0.01,]
+data2<-data2[,.(optimal.lambda=lambda[which.min(error)]),by=.(n,rank,percent_missing,sigma)]
+data2
+ggplot(data = data2,aes(x = sigma, y = optimal.lambda)) +
+  geom_point() + 
+  ylim(c(0,1)) + 
+  facet_wrap(~rank) + ggtitle("Sqrt lasso, n=50, missing=1%, facet by rank")
+
+##################### plot for lasso n=50 ###
+sim_results_ggd<-as.data.table(sim_results_ggd_n50_rank2345_miss0.01)
+data<-sim_results_ggd
+data<-data[,.(optimal.lambda=lambda[which.min(error)]),by=.(n,rank,percent_missing,sigma)]
+data
+ggplot(data = data,aes(x = sigma, y = optimal.lambda))+
+  geom_point(aes(color="lasso")) + 
+  ggtitle("Lasso, n=50, missing=1%, facet by rank") +
+  facet_wrap(~rank)
+
+
+################# plot for lasso and sqrt-lasso combined results ###
+sim_results_ggd<-as.data.table(sim_results_ggd_n50_rank2345_miss0.01)
+data<-sim_results_ggd
+data<-data[,.(optimal.lambda=lambda[which.min(error)]),by=.(n,rank,percent_missing,sigma)]
+data
+ggplot(data = data,aes(x = sigma, y = optimal.lambda))+
+  geom_point(aes(color="lasso")) + 
+  ggtitle("lasso&sqrt lasso, n=50, missing=1%, facet by rank") +
+  facet_wrap(~rank) +
+  geom_point(data = data2,aes(x = sigma, y = optimal.lambda,color="sqrt_lasso"))
+

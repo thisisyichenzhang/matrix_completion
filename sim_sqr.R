@@ -65,6 +65,10 @@ for(n in n_vec){
 }
 
 
-#library(data.table)
-#sim_results<-as.data.table(sim_results)
-#sim_results[,.(optimal.lambda=lambda[which.min(error)]),by=SNR]
+library(data.table)
+library(ggplot2)
+sim_results<-as.data.table(sim_results_n50)
+
+data<-sim_results[,.(optimal.lambda=lambda[which.min(error)]),by=.(n,rank,percent_missing,sigma)]
+data
+ggplot(data = data,aes(x = sigma, y = optimal.lambda,group=percent_missing,shape=as.factor(percent_missing)))+geom_point() + ylim(c(0,1)) + facet_wrap(~rank)

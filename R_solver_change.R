@@ -69,6 +69,7 @@ gen_data <- function(n, rank, percent_missing, sigma){
   #that is the same as calculating SNR <- norm(gen$mu, type = "F")/ norm(noise, type = "F")
 }
 
+
 # Frobenius norm for the non-zeros (observed) entries 
 norm_obs<-function(x){
   n_obs <- length(which(x!=0))
@@ -88,6 +89,52 @@ create.folds <- function(data, mask, nfold){
   return(fold_matrix)
 }
 ############## end of little functions ######################
+
+########## lasso ########
+lasso_mc <- function(data,mask,true,theta = NULL, lambda_sequence = NULL, thresh = 0.01){
+  if(is.null(lambda_sequence)) lambda_sequence <- create.lambda(data)
+  error.by.lambda <- numeric(length(lambda_sequence))
+  unobserv.error.by.lambda <-numeric()
+  observ.error.by.lambda <- numeric()
+  # warm start for the first lambda 
+  tst=theta
+  for(nlambda in 1:length(lambda_sequence)){
+    results <- ggd_solver(Y = data,theta = tst, mask = mask, lambda = lambda_sequence[nlambda],num_it = 1000,thresh = thresh )
+    tst <- results$theta  
+    unobserv.error.by.lambda[nlambda] <- norm(tst * (1-mask) - true * (1-mask),type = "F")
+    observ.error.by.lambda[nlambda] <- norm(tst * mask - true * mask,type = "F")
+    error.by.lambda[nlambda] <- norm(tst - true,type = "F") 
+  }
+  return(list(lambdas = lambda_sequence, 
+              unobserv.errors = unobserv.error.by.lambda,
+              observ.errors = observ.error.by.lambda,
+              errors = error.by.lambda))
+} 
+
+########## end of lasso #######
+
+######### square root lasso ######
+
+sqrlasso_mc <- function(data,mask,true,theta = NULL, lambda_sequence = NULL, thresh = 0.01){
+  if(is.null(lambda_sequence)) lambda_sequence <- create.lambda(data)
+  error.by.lambda <- numeric()
+  unobserv.error.by.lambda <-numeric()
+  observ.error.by.lambda <- numeric()
+  # warm start for the first lambda 
+  tst=theta
+  for(nlambda in 1:length(lambda_sequence)){
+    results <- sqrt_ggd_solver(Y = data,theta = tst, mask = mask, lambda = lambda_sequence[nlambda],num_it = 1000,thresh = thresh )
+    tst <- results$theta  
+    unobserv.error.by.lambda[nlambda] <- norm(tst * (1-mask) - true * (1-mask),type = "F")
+    observ.error.by.lambda[nlambda] <- norm(tst * mask - true * mask,type = "F")
+    error.by.lambda[nlambda] <- norm(tst - true,type = "F") 
+  }
+  return(list(lambdas = lambda_sequence, 
+              unobserv.errors = unobserv.error.by.lambda,
+              observ.errors = observ.error.by.lambda,
+              errors = error.by.lambda))
+} 
+######### end of square root lasso #######
 
 ############ cross validation ##############################
 # cross valadation for classic lasso 
